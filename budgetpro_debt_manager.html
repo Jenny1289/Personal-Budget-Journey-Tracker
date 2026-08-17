@@ -1,0 +1,2360 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BudgetPro & Debt Manager</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+
+        <style>
+        html {
+            font-size: 30px; /* Increases global font size and scales all rem-based Tailwind classes */
+        }
+
+        :root {
+            --brand-50: #eef2ff;
+            --brand-100: #e0e7ff;
+            --brand-200: #c7d2fe;
+            --brand-500: #6366f1;
+            --brand-600: #4f46e5;
+            --brand-700: #4338ca;
+            --brand-800: #3730a3;
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .bg-brand { background-color: var(--brand-600) !important; }
+        .bg-brand-hover:hover { background-color: var(--brand-700) !important; }
+        .bg-brand-light { background-color: var(--brand-50) !important; }
+        .text-brand { color: var(--brand-600) !important; }
+        .border-brand { border-color: var(--brand-600) !important; }
+        .ring-brand:focus { --tw-ring-color: var(--brand-500) !important; }
+        .shadow-brand { box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.15); }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .dark {
+            --bg-main: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+        .dark .bg-white { background-color: #1e293b !important; }
+        .dark .bg-slate-50 { background-color: #0f172a !important; }
+        .dark .bg-slate-100 { background-color: #334155 !important; }
+        .dark .border-slate-100, 
+        .dark .border-slate-200 { border-color: #334155 !important; }
+        .dark .text-slate-900 { color: #f8fafc !important; }
+        .dark .text-slate-800 { color: #f1f5f9 !important; }
+        .dark .text-slate-700 { color: #e2e8f0 !important; }
+        .dark .text-slate-600 { color: #cbd5e1 !important; }
+        .dark .text-slate-500, 
+        .dark .text-slate-400 { color: #94a3b8 !important; }
+        .dark input, .dark select, .dark textarea { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+
+        #toast-container {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            pointer-events: none;
+        }
+        .toast {
+            pointer-events: auto;
+            animation: slideIn 0.3s ease forwards;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+
+    <!-- Desktop Sidebar -->
+    <aside class="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col justify-between z-20 transition-colors shrink-0">
+        <div>
+            <!-- Logo Header -->
+            <div class="p-6 flex items-center justify-between border-b border-slate-100">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-2xl bg-brand text-white flex items-center justify-center text-xl shadow-md transition-all">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-slate-900 leading-tight">BudgetPro</h1>
+                        <p class="text-xs text-slate-400 font-medium">Financial & Debt Tracker</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="p-4 space-y-1.5">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition bg-brand-light text-brand">
+                    <i class="fa-solid fa-chart-pie w-5"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button onclick="switchTab('transactions')" id="nav-transactions" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                    <i class="fa-solid fa-right-left w-5"></i>
+                    <span>Transactions</span>
+                </button>
+                <button onclick="switchTab('savings')" id="nav-savings" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                    <i class="fa-solid fa-piggy-bank w-5"></i>
+                    <span>Savings Goals</span>
+                </button>
+                <button onclick="switchTab('debt')" id="nav-debt" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                    <i class="fa-solid fa-file-invoice-dollar w-5"></i>
+                    <span>Debt Payoff</span>
+                </button>
+                <button onclick="switchTab('borrowers')" id="nav-borrowers" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                    <i class="fa-solid fa-hand-holding-dollar w-5"></i>
+                    <span>Borrowers</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Sidebar Footer Action & Theme Switcher -->
+        <div class="p-4 border-t border-slate-100 space-y-2">
+            <button onclick="openModal('themeModal')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 px-4 rounded-xl font-semibold text-xs transition flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-palette text-sm text-brand"></i>
+                <span>Change Theme Color</span>
+            </button>
+            <button onclick="openModal('transactionModal')" class="w-full bg-brand bg-brand-hover text-white py-3 px-4 rounded-xl font-semibold text-sm shadow-md transition flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-plus text-xs"></i>
+                <span>Add Transaction</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
+        <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between z-10 shrink-0">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-brand text-white flex items-center justify-center text-lg md:hidden shadow-xs">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <div>
+                    <h2 id="current-page-title" class="text-lg md:text-xl font-bold text-slate-900">Dashboard Overview</h2>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <button onclick="openModal('themeModal')" title="Change App Color & Theme" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center space-x-2 border border-slate-200">
+                    <i class="fa-solid fa-palette text-brand text-sm"></i>
+                    <span class="hidden sm:inline">Theme Options</span>
+                </button>
+
+                <button onclick="openModal('transactionModal')" class="md:hidden bg-brand text-white px-3 py-2 rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1.5">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Add</span>
+                </button>
+                <div class="w-9 h-9 rounded-full bg-brand-light text-brand flex items-center justify-center font-bold text-sm border border-brand/20">
+                    <span>₱</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Mobile Navigation Footer -->
+        <div class="md:hidden bg-white border-t border-slate-200 flex justify-around p-2 shrink-0 z-20">
+            <button onclick="switchTab('dashboard')" id="mob-nav-dashboard" class="flex flex-col items-center py-1 px-3 text-brand text-xs font-semibold">
+                <i class="fa-solid fa-chart-pie text-base mb-0.5"></i>
+                <span>Dashboard</span>
+            </button>
+            <button onclick="switchTab('transactions')" id="mob-nav-transactions" class="flex flex-col items-center py-1 px-3 text-slate-400 text-xs font-medium">
+                <i class="fa-solid fa-right-left text-base mb-0.5"></i>
+                <span>Txns</span>
+            </button>
+            <button onclick="switchTab('savings')" id="mob-nav-savings" class="flex flex-col items-center py-1 px-3 text-slate-400 text-xs font-medium">
+                <i class="fa-solid fa-piggy-bank text-base mb-0.5"></i>
+                <span>Savings</span>
+            </button>
+            <button onclick="switchTab('debt')" id="mob-nav-debt" class="flex flex-col items-center py-1 px-3 text-slate-400 text-xs font-medium">
+                <i class="fa-solid fa-file-invoice-dollar text-base mb-0.5"></i>
+                <span>Debt</span>
+            </button>
+            <button onclick="switchTab('borrowers')" id="mob-nav-borrowers" class="flex flex-col items-center py-1 px-3 text-slate-400 text-xs font-medium">
+                <i class="fa-solid fa-hand-holding-dollar text-base mb-0.5"></i>
+                <span>Borrow</span>
+            </button>
+        </div>
+
+        <!-- Scrollable Content View Container -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8 flex flex-col">
+            
+            <!-- Global Reminders Alert Banner -->
+            <div id="reminders-alert-banner" class="mb-6 hidden">
+                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-xs">
+                    <div class="flex items-start space-x-3">
+                        <div class="p-2.5 bg-amber-500 text-white rounded-xl text-lg shrink-0">
+                            <i class="fa-solid fa-bell"></i>
+                        </div>
+                        <div>
+                            <h4 id="banner-title" class="font-bold text-amber-900 text-sm">Upcoming Due Date Reminders</h4>
+                            <p id="banner-desc" class="text-xs text-amber-700 mt-0.5">You have active monthly payments due this week!</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
+                        <button onclick="switchTab('debt')" class="px-3.5 py-1.5 bg-amber-600 text-white hover:bg-amber-700 rounded-xl text-xs font-bold transition">View Debts</button>
+                        <button onclick="switchTab('borrowers')" class="px-3.5 py-1.5 bg-slate-800 text-white hover:bg-slate-900 rounded-xl text-xs font-bold transition">View Borrowers</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DASHBOARD TAB VIEW -->
+            <div id="view-dashboard" class="tab-view flex-1 space-y-6 pb-12">
+                <!-- Summary Metric Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Balance</p>
+                            <h3 id="card-balance" class="text-2xl font-bold text-slate-900 mt-1">₱0.00</h3>
+                            <span id="card-savings-rate" class="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-md mt-1 inline-block">0% savings rate</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-brand-light text-brand flex items-center justify-center text-xl shadow-xs">
+                            <i class="fa-solid fa-vault"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Savings</p>
+                            <h3 id="card-total-savings" class="text-2xl font-bold text-brand mt-1">₱0.00</h3>
+                            <span id="card-savings-count" class="text-xs text-slate-400 mt-1 inline-block">0 goals active</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-brand-light text-brand flex items-center justify-center text-xl shadow-xs">
+                            <i class="fa-solid fa-piggy-bank"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Income</p>
+                            <h3 id="card-income" class="text-2xl font-bold text-emerald-600 mt-1">₱0.00</h3>
+                            <span class="text-xs text-slate-400 mt-1 inline-block">Recorded earnings</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shadow-xs">
+                            <i class="fa-solid fa-arrow-trend-up"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Expenses</p>
+                            <h3 id="card-expense" class="text-2xl font-bold text-rose-600 mt-1">₱0.00</h3>
+                            <span class="text-xs text-slate-400 mt-1 inline-block">Outflows & spending</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl shadow-xs">
+                            <i class="fa-solid fa-arrow-trend-down"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Debt</p>
+                            <h3 id="card-debt" class="text-2xl font-bold text-amber-600 mt-1">₱0.00</h3>
+                            <span id="card-debt-count" class="text-xs text-slate-400 mt-1 inline-block">0 active accounts</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shadow-xs">
+                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly & Period Filter Breakdown -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-base">Period Breakdown & Budget Tracking</h4>
+                            <p class="text-xs text-slate-500">Monitor monthly and annual totals against your budget limit</p>
+                        </div>
+                        <div class="flex items-center space-x-3 flex-wrap gap-y-2">
+                            <select id="period-month-select" onchange="renderDashboard()" class="px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand font-medium">
+                                <option value="01">January</option>
+                                <option value="02">February</option>
+                                <option value="03" selected>March</option>
+                                <option value="04">April</option>
+                                <option value="05">May</option>
+                                <option value="06">June</option>
+                                <option value="07">July</option>
+                                <option value="08">August</option>
+                                <option value="09">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+                            
+                            <div class="flex items-center space-x-1">
+                                <select id="period-year-select" onchange="renderDashboard()" class="px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand font-medium">
+                                </select>
+                                <button onclick="openModal('yearManagerModal')" title="Manage Years" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition flex items-center justify-center">
+                                    <i class="fa-solid fa-gear"></i>
+                                </button>
+                            </div>
+
+                            <button onclick="openModal('budgetModal')" class="bg-brand-light hover:bg-slate-200 text-brand px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 shadow-xs">
+                                <i class="fa-solid fa-sliders"></i>
+                                <span>Set Overall Budget</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Monthly Income (<span class="month-year-label">March 2026</span>)</span>
+                            <h3 id="period-monthly-income" class="text-xl font-bold text-emerald-600">₱0.00</h3>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Monthly Expenses</span>
+                                <span id="monthly-budget-status" class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700">On Track</span>
+                            </div>
+                            <h3 id="period-monthly-expense" class="text-xl font-bold text-rose-600">₱0.00</h3>
+                            <div class="flex items-center justify-between pt-1">
+                                <span class="text-xs text-slate-400">Budget Limit: <span id="monthly-budget-limit" class="font-semibold text-slate-700">₱35,000.00</span></span>
+                                <button onclick="openModal('budgetModal')" class="text-brand hover:underline text-xs font-bold flex items-center space-x-1">
+                                    <i class="fa-solid fa-pen text-[10px]"></i>
+                                    <span>Edit</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Yearly Income (<span class="year-label">2026</span>)</span>
+                            <h3 id="period-yearly-income" class="text-xl font-bold text-emerald-600">₱0.00</h3>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-1">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Yearly Expenses (<span class="year-label">2026</span>)</span>
+                            <h3 id="period-yearly-expense" class="text-xl font-bold text-rose-600">₱0.00</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accounts Breakdown -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-base">Accounts & Wallets Breakdown</h4>
+                            <p class="text-xs text-slate-500">Track funds across cash, banks, and digital wallets</p>
+                        </div>
+                        <button onclick="openModal('accountsModal')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center space-x-1.5">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            <span>Edit Accounts</span>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4" id="accounts-grid-display">
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-bold text-slate-900 text-base">Income vs Actual Expenses</h4>
+                            <span class="text-xs text-slate-400 font-medium">Cash Flow Comparison</span>
+                        </div>
+                        <div class="flex-1 relative min-h-[260px]">
+                            <canvas id="cashflowChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-bold text-slate-900 text-base">Budget vs Actual Expenses</h4>
+                            <span class="text-xs text-slate-400 font-medium">Target vs Spent</span>
+                        </div>
+                        <div class="flex-1 relative min-h-[260px]">
+                            <canvas id="budgetDiffChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col">
+                        <h4 class="font-bold text-slate-900 text-base mb-4">Expense Categories Breakdown</h4>
+                        <div class="flex-1 relative min-h-[280px] flex items-center justify-center">
+                            <canvas id="expenseChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions Dashboard Table -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                    <div class="flex items-center justify-between mb-4">
+                        <h4 class="font-bold text-slate-900 text-base">Recent Transactions</h4>
+                        <button onclick="switchTab('transactions')" class="text-brand hover:underline text-xs font-semibold">View All</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-100 text-slate-400 text-xs uppercase tracking-wider">
+                                    <th class="py-3 font-semibold">Type</th>
+                                    <th class="py-3 font-semibold">Description</th>
+                                    <th class="py-3 font-semibold">Category / Route</th>
+                                    <th class="py-3 font-semibold">Date</th>
+                                    <th class="py-3 font-semibold">Budget</th>
+                                    <th class="py-3 font-semibold text-right">Amount</th>
+                                    <th class="py-3 font-semibold text-right">Diff</th>
+                                    <th class="py-3 font-semibold text-right">Status & Source</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-transactions-list" class="divide-y divide-slate-100">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TRANSACTIONS TAB VIEW -->
+            <div id="view-transactions" class="tab-view flex-1 space-y-6 pb-12 hidden">
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="w-full md:w-72">
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                            </span>
+                            <input type="text" id="txn-search" oninput="renderTransactions()" placeholder="Search transactions..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3 w-full md:w-auto justify-end">
+                        <select id="txn-filter" onchange="renderTransactions()" class="px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                            <option value="all">All Types</option>
+                            <option value="income">Income Only</option>
+                            <option value="expense">Expenses Only</option>
+                            <option value="transfer">Transfers Only</option>
+                        </select>
+                        <button onclick="openModal('transactionModal')" class="bg-brand bg-brand-hover text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-xs flex items-center space-x-2">
+                            <i class="fa-solid fa-plus text-xs"></i>
+                            <span>Add New</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="border-b border-slate-100 text-slate-400 text-xs uppercase tracking-wider">
+                                    <th class="py-3 font-semibold">Type</th>
+                                    <th class="py-3 font-semibold">Description</th>
+                                    <th class="py-3 font-semibold">Category / Route</th>
+                                    <th class="py-3 font-semibold">Date</th>
+                                    <th class="py-3 font-semibold">Budget</th>
+                                    <th class="py-3 font-semibold text-right">Amount</th>
+                                    <th class="py-3 font-semibold text-right">Diff</th>
+                                    <th class="py-3 font-semibold text-right">Status & Source</th>
+                                    <th class="py-3 font-semibold text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="full-transactions-list" class="divide-y divide-slate-100">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SAVINGS TAB VIEW -->
+            <div id="view-savings" class="tab-view flex-1 space-y-6 pb-12 hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-lg">Savings Goals</h3>
+                        <p class="text-xs text-slate-500">Track progress, target dates, add funds, and view detailed deposit histories</p>
+                    </div>
+                    <button onclick="openModal('savingsModal')" class="bg-brand bg-brand-hover text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-xs flex items-center space-x-2">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>New Goal</span>
+                    </button>
+                </div>
+
+                <div id="savings-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            </div>
+
+            <!-- DEBT PAYOFF TAB VIEW -->
+            <div id="view-debt" class="tab-view flex-1 space-y-6 pb-12 hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-lg">Debt Payoff Planner</h3>
+                        <p class="text-xs text-slate-500">Auto-calculates monthly total payments (`Total ÷ Duration`), track payments with Pay Now, and view full payment histories</p>
+                    </div>
+                    <button onclick="openModal('debtModal')" class="bg-brand bg-brand-hover text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-xs flex items-center space-x-2">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                        <span>Add Debt</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div id="debt-list" class="lg:col-span-2 space-y-6">
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs h-fit space-y-4">
+                            <h4 class="font-bold text-slate-900 text-base">Debt Summary & Strategy</h4>
+                            <p class="text-xs text-slate-500 leading-relaxed">
+                                Monthly payments are calculated automatically from your total debt divided by loan duration in months.
+                            </p>
+                            <div class="p-4 bg-amber-50 rounded-xl border border-amber-100 space-y-2">
+                                <span class="text-xs font-semibold text-amber-800 uppercase tracking-wider block">Total Outstanding Debt</span>
+                                <h3 id="strategy-total-debt" class="text-2xl font-bold text-amber-900">₱0.00</h3>
+                            </div>
+                            <div class="p-4 bg-brand-light rounded-xl border border-brand/20 space-y-2">
+                                <span class="text-xs font-semibold text-brand uppercase tracking-wider block">Total Monthly Scheduled Payments</span>
+                                <h3 id="strategy-monthly-debt" class="text-2xl font-bold text-brand">₱0.00</h3>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs h-fit space-y-4">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                                    <i class="fa-regular fa-calendar text-brand"></i> Due Dates & Installments
+                                </h4>
+                                <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded month-year-label"></span>
+                            </div>
+                            <p class="text-xs text-slate-500">Upcoming debt due dates and monthly payment reminders.</p>
+                            <div id="debt-calendar-list" class="space-y-2">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BORROWERS TAB VIEW -->
+            <div id="view-borrowers" class="tab-view flex-1 space-y-6 pb-12 hidden">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-lg">Borrowers Tracker</h3>
+                        <p class="text-xs text-slate-500">Track money lent across Sloan, Atome, Gloan, TikTok, and Personal loans with Collect payments & full transaction history.</p>
+                    </div>
+                    <button onclick="openModal('borrowerModal')" class="bg-brand bg-brand-hover text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-xs flex items-center space-x-2">
+                        <i class="fa-solid fa-plus text-xs"></i><span>Add Borrower Loan</span>
+                    </button>
+                </div>
+
+                <!-- Loan Type Quick Filter Buttons Bar -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Filter Loan Type:</span>
+                        <span id="borrower-filter-count" class="text-xs font-medium text-slate-500">Showing all loans</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="setBorrowerFilter('all')" id="b-filter-all" class="b-filter-btn px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 bg-brand text-white border border-brand">
+                            <i class="fa-solid fa-layer-group"></i>
+                            <span>All Loans</span>
+                        </button>
+                        <button onclick="setBorrowerFilter('Sloan')" id="b-filter-Sloan" class="b-filter-btn px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 bg-slate-50 text-slate-700 border border-slate-200 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200">
+                            <i class="fa-solid fa-bag-shopping text-orange-500"></i>
+                            <span>Sloan</span>
+                        </button>
+                        <button onclick="setBorrowerFilter('Atome')" id="b-filter-Atome" class="b-filter-btn px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 bg-slate-50 text-slate-700 border border-slate-200 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200">
+                            <i class="fa-solid fa-bolt text-amber-500"></i>
+                            <span>Atome</span>
+                        </button>
+                        <button onclick="setBorrowerFilter('Gloan')" id="b-filter-Gloan" class="b-filter-btn px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 bg-slate-50 text-slate-700 border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200">
+                            <i class="fa-solid fa-mobile-screen-button text-blue-500"></i>
+                            <span>Gloan</span>
+                        </button>
+                        <button onclick="setBorrowerFilter('Tiktok')" id="b-filter-Tiktok" class="b-filter-btn px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-teal-300">
+                            <i class="fa-brands fa-tiktok text-teal-400"></i>
+                            <span>TikTok</span>
+                        </button>
+                        <button onclick="setBorrowerFilter('Personal')" id="b-filter-Personal" class="b-filter-btn px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 bg-slate-50 text-slate-700 border border-slate-200 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200">
+                            <i class="fa-solid fa-user-check text-indigo-500"></i>
+                            <span>Personal / Other</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Lent</p>
+                        <h3 id="borrowers-total-lent" class="text-2xl font-bold text-brand mt-1">₱0.00</h3>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Collected</p>
+                        <h3 id="borrowers-total-paid" class="text-2xl font-bold text-emerald-600 mt-1">₱0.00</h3>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Outstanding Balance</p>
+                        <h3 id="borrowers-total-balance" class="text-2xl font-bold text-amber-600 mt-1">₱0.00</h3>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs lg:col-span-2">
+                        <div id="borrowers-list" class="space-y-4"></div>
+                        <div id="borrowers-empty" class="text-center py-12 text-slate-400">
+                            <i class="fa-solid fa-users text-4xl mb-3"></i>
+                            <p class="font-semibold">No borrowers yet</p>
+                            <p class="text-xs mt-1">Click "Add Borrower Loan" to start tracking a loan.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs h-fit space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                                <i class="fa-regular fa-calendar-check text-emerald-600"></i> Expected Collections
+                            </h4>
+                            <span class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded month-year-label"></span>
+                        </div>
+                        <p class="text-xs text-slate-500">Upcoming expected borrower monthly installments.</p>
+                        <div id="borrower-calendar-list" class="space-y-2">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- BORROWER MODAL -->
+    <div id="borrowerModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="font-bold text-lg text-slate-900" id="borrower-modal-title">Add Borrower Loan</h3>
+                    <p class="text-xs text-slate-400">Record money lent and schedule monthly due date reminders.</p>
+                </div>
+                <button onclick="closeModal('borrowerModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="borrowerForm" onsubmit="handleBorrowerSubmit(event)" class="space-y-4">
+                <input type="hidden" id="borrower-edit-id" value="">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Borrower Name</label>
+                    <input type="text" id="borrower-name" required placeholder="e.g. Maria Santos" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1.5">What Kind of Loan?</label>
+                    <input type="hidden" id="borrower-loan-type" value="Sloan">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2" id="loan-type-buttons">
+                        <button type="button" onclick="selectLoanType('Sloan')" id="btn-loan-Sloan" class="loan-type-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-xl border border-brand bg-brand-light text-brand font-semibold text-xs transition">
+                            <i class="fa-solid fa-bag-shopping text-orange-500"></i>
+                            <span>Sloan</span>
+                        </button>
+                        <button type="button" onclick="selectLoanType('Atome')" id="btn-loan-Atome" class="loan-type-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-semibold text-xs hover:bg-slate-100 transition">
+                            <i class="fa-solid fa-bolt text-amber-500"></i>
+                            <span>Atome</span>
+                        </button>
+                        <button type="button" onclick="selectLoanType('Gloan')" id="btn-loan-Gloan" class="loan-type-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-semibold text-xs hover:bg-slate-100 transition">
+                            <i class="fa-solid fa-mobile-screen-button text-blue-500"></i>
+                            <span>Gloan</span>
+                        </button>
+                        <button type="button" onclick="selectLoanType('Tiktok')" id="btn-loan-Tiktok" class="loan-type-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-semibold text-xs hover:bg-slate-100 transition">
+                            <i class="fa-brands fa-tiktok text-teal-400"></i>
+                            <span>TikTok</span>
+                        </button>
+                        <button type="button" onclick="selectLoanType('Personal')" id="btn-loan-Personal" class="loan-type-btn flex items-center justify-center space-x-1.5 py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 font-semibold text-xs hover:bg-slate-100 transition sm:col-span-2">
+                            <i class="fa-solid fa-user-check text-indigo-500"></i>
+                            <span>Personal / Other</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Total Amount (₱)</label>
+                        <input type="number" step="0.01" min="0.01" id="borrower-amount" required placeholder="6000" oninput="autoCalculateMonthly('borrower')" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Duration (Months)</label>
+                        <input type="number" min="1" max="120" id="borrower-months" value="3" required oninput="autoCalculateMonthly('borrower')" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand font-medium">
+                    </div>
+                </div>
+
+                <div class="bg-brand-light p-3.5 rounded-xl border border-brand/20 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs text-brand font-bold uppercase tracking-wider block">Auto Monthly Payment</span>
+                        <p class="text-xs text-slate-500">Total Borrow ÷ Duration</p>
+                    </div>
+                    <span id="borrower-monthly-calc" class="text-lg font-bold text-brand">₱0.00 / mo</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">First Due Date</label>
+                        <input type="date" id="borrower-due-date" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Already Paid (₱)</label>
+                        <input type="number" step="0.01" min="0" id="borrower-paid" value="0" placeholder="0" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Notes / Description</label>
+                    <textarea id="borrower-notes" rows="2" placeholder="Optional details (e.g. Shopee purchase ref, cash loan)..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand resize-none"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('borrowerModal')" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-brand text-white rounded-xl text-sm font-medium">Save Borrower Loan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- DEBT MODAL -->
+    <div id="debtModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <div><h3 class="font-bold text-lg text-slate-900" id="debt-modal-title">Add Debt Account</h3><p class="text-xs text-slate-400">Track loans, credit cards, or payables.</p></div>
+                <button onclick="closeModal('debtModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="debtForm" onsubmit="handleDebtSubmit(event)" class="space-y-4">
+                <input type="hidden" id="debt-edit-id" value="">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Debt Name / Creditor</label>
+                    <input type="text" id="debt-name" required placeholder="e.g. BPI Credit Card or Loan" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Total Debt Amount (₱)</label>
+                        <input type="number" step="0.01" min="0.01" id="debt-total" required placeholder="30000" oninput="autoCalculateMonthly('debt')" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Duration (Months)</label>
+                        <input type="number" min="1" max="120" id="debt-months" value="12" required oninput="autoCalculateMonthly('debt')" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand font-medium">
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 p-3.5 rounded-xl border border-amber-200 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs text-amber-800 font-bold uppercase tracking-wider block">Auto Monthly Payment</span>
+                        <p class="text-xs text-amber-600">Total Debt ÷ Duration</p>
+                    </div>
+                    <span id="debt-monthly-calc" class="text-lg font-bold text-amber-900">₱0.00 / mo</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Custom Monthly Payment (₱)</label>
+                        <input type="number" step="0.01" min="0" id="debt-monthly" required placeholder="2500" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">First Due Date</label>
+                        <input type="date" id="debt-due-date" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Interest Rate (% APR)</label>
+                    <input type="number" step="0.01" min="0" id="debt-apr" value="0" placeholder="0" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('debtModal')" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-brand text-white rounded-xl text-sm font-medium">Save Debt</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- COLLECT BORROWER PAYMENT MODAL -->
+    <div id="collectBorrowerModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="collect-borrower-title" class="font-bold text-lg text-slate-900">Record Payment Collection</h3>
+                <button onclick="closeModal('collectBorrowerModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="collectBorrowerForm" onsubmit="handleCollectBorrowerSubmit(event)" class="space-y-4">
+                <input type="hidden" id="collect-borrower-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Amount Collected (₱)</label>
+                    <input type="number" step="0.01" min="0.01" id="collect-amount" required placeholder="1000" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand font-semibold">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Deposit To Account / Wallet</label>
+                    <select id="collect-account" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand font-medium">
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Date Collected</label>
+                    <input type="date" id="collect-date" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Notes / Remarks</label>
+                    <input type="text" id="collect-notes" placeholder="Optional notes e.g. Installment payment 1" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                </div>
+                <div class="flex items-center space-x-2 pt-2">
+                    <input type="checkbox" id="collect-add-txn" checked class="w-4 h-4 text-brand rounded focus:ring-brand">
+                    <label for="collect-add-txn" class="text-xs text-slate-600">Log as Income transaction automatically</label>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('collectBorrowerModal')" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl text-sm font-medium">Save Collection</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PAY DEBT MODAL -->
+    <div id="payDebtModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="pay-debt-title" class="font-bold text-lg text-slate-900">Record Debt Payment</h3>
+                <button onclick="closeModal('payDebtModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="payDebtForm" onsubmit="handlePayDebtSubmit(event)" class="space-y-4">
+                <input type="hidden" id="pay-debt-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Payment Amount (₱)</label>
+                    <input type="number" step="0.01" min="0.01" id="pay-amount" required placeholder="2500" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand font-semibold">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Deduct From Account / Wallet</label>
+                    <select id="pay-account" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand font-medium">
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Payment Date</label>
+                    <input type="date" id="pay-date" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Notes / Remarks</label>
+                    <input type="text" id="pay-notes" placeholder="Optional notes e.g. Monthly statement payment" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                </div>
+                <div class="flex items-center space-x-2 pt-2">
+                    <input type="checkbox" id="pay-add-txn" checked class="w-4 h-4 text-brand rounded focus:ring-brand">
+                    <label for="pay-add-txn" class="text-xs text-slate-600">Log as Expense transaction automatically</label>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('payDebtModal')" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-brand text-white hover:bg-brand-hover rounded-xl text-sm font-medium">Record Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- GENERAL HISTORY MODAL (For Savings, Debt, & Borrowers) -->
+    <div id="historyModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 max-h-[85vh] flex flex-col">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <div>
+                    <h3 id="history-modal-title" class="font-bold text-lg text-slate-900">Transaction History</h3>
+                    <p id="history-modal-subtitle" class="text-xs text-slate-500">Detailed record of contributions, collections, or payments</p>
+                </div>
+                <button onclick="closeModal('historyModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div id="history-modal-body" class="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-1">
+            </div>
+
+            <div class="pt-4 mt-2 border-t border-slate-100 flex justify-between items-center">
+                <span id="history-total-summary" class="text-xs font-bold text-slate-600"></span>
+                <button onclick="closeModal('historyModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCHEDULE / AMORTIZATION TIMELINE MODAL -->
+    <div id="scheduleModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-100 max-h-[85vh] flex flex-col">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <div>
+                    <h3 id="schedule-modal-title" class="font-bold text-lg text-slate-900">Monthly Payment Schedule</h3>
+                    <p id="schedule-modal-subtitle" class="text-xs text-slate-500">Breakdown of due dates and monthly payments across loan duration</p>
+                </div>
+                <button onclick="closeModal('scheduleModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="schedule-modal-body" class="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1">
+            </div>
+            <div class="pt-4 mt-2 border-t border-slate-100 flex justify-end">
+                <button onclick="closeModal('scheduleModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition">Close Schedule</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRANSACTION MODAL -->
+    <div id="transactionModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="txn-modal-title" class="font-bold text-lg text-slate-900">Add New Transaction</h3>
+                <button onclick="closeModal('transactionModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="transactionForm" onsubmit="handleTransactionSubmit(event)" class="space-y-4">
+                <input type="hidden" id="txn-edit-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Transaction Type</label>
+                    <select id="txn-type" onchange="toggleTxnFields()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand font-medium">
+                        <option value="expense">Expense (-)</option>
+                        <option value="income">Income (+)</option>
+                        <option value="transfer">Transfer between Accounts</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Description</label>
+                    <input type="text" id="txn-desc" required placeholder="e.g. Groceries or Salary" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Amount (₱)</label>
+                        <input type="number" step="0.01" min="0.01" id="txn-amount" required placeholder="1500" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand font-semibold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Date</label>
+                        <input type="date" id="txn-date" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Assigned Budget (₱)</label>
+                    <input type="number" step="0.01" min="0" id="txn-budget" placeholder="1500" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand font-semibold" value="0">
+                    <p class="text-[10px] text-slate-400 mt-0.5">Budget allocated for this specific transaction or category item.</p>
+                </div>
+
+                <div id="txn-category-field">
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Category</label>
+                    <select id="txn-category" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                        <option value="Food & Dining">Food & Dining</option>
+                        <option value="Bills & Utilities">Bills & Utilities</option>
+                        <option value="Shopping & Supplies">Shopping & Supplies</option>
+                        <option value="Transportation">Transportation</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Health & Medical">Health & Medical</option>
+                        <option value="Salary & Wages">Salary & Wages</option>
+                        <option value="Business & Freelance">Business & Freelance</option>
+                        <option value="Savings Deposit">Savings Deposit</option>
+                        <option value="Debt Payment">Debt Payment</option>
+                        <option value="Loan Collection">Loan Collection</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div id="txn-account-single">
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Account / Wallet Source</label>
+                    <select id="txn-account" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                    </select>
+                </div>
+
+                <div id="txn-transfer-fields" class="grid grid-cols-2 gap-4 hidden">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">From Account</label>
+                        <select id="txn-from-account" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">To Account</label>
+                        <select id="txn-to-account" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('transactionModal')" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-brand text-white rounded-xl text-sm font-medium">Save Transaction</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SAVINGS GOAL MODAL -->
+    <div id="savingsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-lg text-slate-900">Create Savings Goal</h3>
+                <button onclick="closeModal('savingsModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="savingsForm" onsubmit="handleSavingsSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Goal Name</label>
+                    <input type="text" id="goal-name" required placeholder="e.g. Emergency Fund or New Laptop" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Target Amount (₱)</label>
+                        <input type="number" step="0.01" min="1" id="goal-target" required placeholder="50000" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Target Date</label>
+                        <input type="date" id="goal-date" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('savingsModal')" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-brand text-white rounded-xl text-sm font-medium">Create Goal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- DEPOSIT / ADD FUNDS TO SAVINGS MODAL -->
+    <div id="depositModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="deposit-goal-title" class="font-bold text-lg text-slate-900">Add Funds to Savings Goal</h3>
+                <button onclick="closeModal('depositModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="depositForm" onsubmit="handleDepositSubmit(event)" class="space-y-4">
+                <input type="hidden" id="deposit-goal-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Deposit Amount (₱)</label>
+                    <input type="number" step="0.01" min="0.01" id="deposit-amount" required placeholder="1000" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand font-semibold">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Deduct From Account / Wallet</label>
+                    <select id="deposit-account" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand font-medium">
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Deposit Date</label>
+                    <input type="date" id="deposit-date" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Notes / Remarks</label>
+                    <input type="text" id="deposit-notes" placeholder="Optional notes e.g. Monthly salary contribution" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand">
+                </div>
+                <div class="flex items-center space-x-2 pt-2">
+                    <input type="checkbox" id="deposit-add-txn" checked class="w-4 h-4 text-brand rounded focus:ring-brand">
+                    <label for="deposit-add-txn" class="text-xs text-slate-600">Log as Expense/Savings transaction</label>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('depositModal')" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-brand text-white rounded-xl text-sm font-medium">Add Funds</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- BUDGET MODAL -->
+    <div id="budgetModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-lg text-slate-900">Set Monthly Budget Limit</h3>
+                <button onclick="closeModal('budgetModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="budgetForm" onsubmit="handleBudgetSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Monthly Spending Budget (₱)</label>
+                    <input type="number" step="1" min="1" id="budget-amount-input" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none ring-brand font-bold text-lg">
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('budgetModal')" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-brand text-white rounded-xl text-sm font-medium">Save Budget</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- THEME MODAL -->
+    <div id="themeModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-lg text-slate-900">Custom Theme & Color Options</h3>
+                <button onclick="closeModal('themeModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-2">Accent Color Theme</label>
+                    <div class="grid grid-cols-4 gap-3">
+                        <button onclick="applyThemeColor('#4f46e5')" class="h-10 rounded-xl bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">Indigo</button>
+                        <button onclick="applyThemeColor('#0284c7')" class="h-10 rounded-xl bg-sky-600 text-white font-bold text-xs flex items-center justify-center">Sky</button>
+                        <button onclick="applyThemeColor('#059669')" class="h-10 rounded-xl bg-emerald-600 text-white font-bold text-xs flex items-center justify-center">Emerald</button>
+                        <button onclick="applyThemeColor('#d97706')" class="h-10 rounded-xl bg-amber-600 text-white font-bold text-xs flex items-center justify-center">Amber</button>
+                        <button onclick="applyThemeColor('#e11d48')" class="h-10 rounded-xl bg-rose-600 text-white font-bold text-xs flex items-center justify-center">Rose</button>
+                        <button onclick="applyThemeColor('#9333ea')" class="h-10 rounded-xl bg-purple-600 text-white font-bold text-xs flex items-center justify-center">Purple</button>
+                        <button onclick="applyThemeColor('#0d9488')" class="h-10 rounded-xl bg-teal-600 text-white font-bold text-xs flex items-center justify-center">Teal</button>
+                        <button onclick="applyThemeColor('#1e293b')" class="h-10 rounded-xl bg-slate-800 text-white font-bold text-xs flex items-center justify-center">Slate</button>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+                    <span class="text-sm font-semibold text-slate-700">Dark Mode</span>
+                    <button onclick="toggleDarkMode()" id="dark-mode-toggle-btn" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition flex items-center space-x-2">
+                        <i class="fa-solid fa-moon"></i>
+                        <span>Toggle Mode</span>
+                    </button>
+                </div>
+            </div>
+            <div class="flex justify-end pt-6 border-t border-slate-100">
+                <button onclick="closeModal('themeModal')" class="px-5 py-2 bg-slate-900 text-white rounded-xl text-sm font-medium">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ACCOUNTS MODAL -->
+    <div id="accountsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 max-h-[85vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-lg text-slate-900">Manage Accounts & Wallets</h3>
+                <button onclick="closeModal('accountsModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="accounts-edit-list" class="space-y-3">
+            </div>
+            <div class="pt-4 mt-4 border-t border-slate-100 flex justify-between items-center">
+                <button onclick="addAccountPrompt()" class="px-3.5 py-2 bg-brand-light text-brand hover:bg-slate-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Add Account</span>
+                </button>
+                <button onclick="closeModal('accountsModal')" class="px-5 py-2 bg-brand text-white rounded-xl text-sm font-medium">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- YEAR MANAGER MODAL -->
+    <div id="yearManagerModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-100">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-lg text-slate-900">Select Active Year</h3>
+                <button onclick="closeModal('yearManagerModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="year-options-list" class="space-y-2 mb-4">
+            </div>
+            <button onclick="addNewYearPrompt()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add New Year</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <script>
+        const defaultAccounts = [
+            { id: 'cash', name: 'Cash on Hand', balance: 5000, icon: 'fa-money-bill-wave', color: 'emerald' },
+            { id: 'bdo', name: 'BDO Bank', balance: 25000, icon: 'fa-building-columns', color: 'blue' },
+            { id: 'gcash', name: 'GCash', balance: 12000, icon: 'fa-mobile-screen-button', color: 'cyan' },
+            { id: 'maribank', name: 'MariBank', balance: 18000, icon: 'fa-piggy-bank', color: 'amber' },
+            { id: 'gotyme', name: 'GoTyme', balance: 15000, icon: 'fa-wallet', color: 'brand' }
+        ];
+
+        let state = {
+            monthlyBudget: parseFloat(localStorage.getItem('bp_monthlyBudget')) || 35000,
+            activeYear: localStorage.getItem('bp_activeYear') || '2026',
+            availableYears: JSON.parse(localStorage.getItem('bp_availableYears')) || ['2025', '2026', '2027'],
+            darkMode: JSON.parse(localStorage.getItem('bp_darkMode')) || false,
+            themeColor: localStorage.getItem('bp_themeColor') || '#4f46e5',
+            borrowerFilter: 'all',
+            accounts: JSON.parse(localStorage.getItem('bp_accounts')) || defaultAccounts,
+            transactions: JSON.parse(localStorage.getItem('bp_transactions')) || [
+                { id: 't1', type: 'income', desc: 'Monthly Salary', amount: 50000, date: '2026-03-01', category: 'Salary & Wages', account: 'bdo', budget: 50000 },
+                { id: 't2', type: 'expense', desc: 'Grocery Shopping', amount: 4500, date: '2026-03-02', category: 'Food & Dining', account: 'gcash', budget: 5000 },
+                { id: 't3', type: 'expense', desc: 'Electric Bill', amount: 3200, date: '2026-03-05', category: 'Bills & Utilities', account: 'bdo', budget: 3000 }
+            ],
+            savings: JSON.parse(localStorage.getItem('bp_savings')) || [
+                { 
+                    id: 's1', 
+                    name: 'Emergency Fund', 
+                    target: 100000, 
+                    current: 35000, 
+                    date: '2026-12-31', 
+                    history: [
+                        { id: 'sh1', date: '2026-01-10', amount: 15000, account: 'bdo', notes: 'Initial fund deposit' },
+                        { id: 'sh2', date: '2026-02-15', amount: 10000, account: 'maribank', notes: 'Monthly deposit' },
+                        { id: 'sh3', date: '2026-03-01', amount: 10000, account: 'bdo', notes: 'Bonus deposit' }
+                    ] 
+                }
+            ],
+            debts: JSON.parse(localStorage.getItem('bp_debts')) || [
+                { 
+                    id: 'd1', 
+                    name: 'BPI Credit Card', 
+                    total: 30000, 
+                    months: 12, 
+                    monthly: 2500, 
+                    paid: 5000, 
+                    dueDate: '2026-03-15', 
+                    apr: 0, 
+                    history: [
+                        { id: 'dh1', date: '2026-01-15', amount: 2500, account: 'bdo', notes: 'January installment' },
+                        { id: 'dh2', date: '2026-02-15', amount: 2500, account: 'bdo', notes: 'February installment' }
+                    ] 
+                }
+            ],
+            borrowers: JSON.parse(localStorage.getItem('bp_borrowers')) || [
+                { 
+                    id: 'b1', 
+                    name: 'Maria Santos', 
+                    loanType: 'Sloan', 
+                    amount: 6000, 
+                    months: 3, 
+                    monthly: 2000, 
+                    paid: 2000, 
+                    dueDate: '2026-03-20', 
+                    notes: 'Shopee purchase loan', 
+                    history: [
+                        { id: 'bh1', date: '2026-02-20', amount: 2000, account: 'gcash', notes: 'Installment 1 payment' }
+                    ] 
+                }
+            ]
+        };
+
+        // Chart instance references
+        let chartCashflow = null;
+        let chartBudget = null;
+        let chartExpense = null;
+
+        function saveState() {
+            localStorage.setItem('bp_monthlyBudget', state.monthlyBudget);
+            localStorage.setItem('bp_activeYear', state.activeYear);
+            localStorage.setItem('bp_availableYears', JSON.stringify(state.availableYears));
+            localStorage.setItem('bp_darkMode', JSON.stringify(state.darkMode));
+            localStorage.setItem('bp_themeColor', state.themeColor);
+            localStorage.setItem('bp_accounts', JSON.stringify(state.accounts));
+            localStorage.setItem('bp_transactions', JSON.stringify(state.transactions));
+            localStorage.setItem('bp_savings', JSON.stringify(state.savings));
+            localStorage.setItem('bp_debts', JSON.stringify(state.debts));
+            localStorage.setItem('bp_borrowers', JSON.stringify(state.borrowers));
+        }
+
+        function formatCurrency(val) {
+            return '₱' + (parseFloat(val) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatNum(val) {
+            return (parseFloat(val) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return 'N/A';
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast px-4 py-3 rounded-xl text-xs font-bold text-white shadow-lg flex items-center space-x-2 ${
+                type === 'success' ? 'bg-emerald-600' : type === 'error' ? 'bg-rose-600' : 'bg-slate-800'
+            }`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-triangle-exclamation' : 'fa-circle-info'}"></i><span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+
+            const pageTitles = {
+                dashboard: 'Dashboard Overview',
+                transactions: 'Transactions Ledger',
+                savings: 'Savings Goals Tracker',
+                debt: 'Debt Payoff Planner',
+                borrowers: 'Borrowers Loan Tracker'
+            };
+            document.getElementById('current-page-title').innerText = pageTitles[tabId] || 'Dashboard';
+
+            ['dashboard', 'transactions', 'savings', 'debt', 'borrowers'].forEach(t => {
+                const navBtn = document.getElementById(`nav-${t}`);
+                const mobNavBtn = document.getElementById(`mob-nav-${t}`);
+                if (t === tabId) {
+                    if (navBtn) {
+                        navBtn.className = "w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition bg-brand-light text-brand";
+                    }
+                    if (mobNavBtn) {
+                        mobNavBtn.className = "flex flex-col items-center py-1 px-3 text-brand text-xs font-semibold";
+                    }
+                } else {
+                    if (navBtn) {
+                        navBtn.className = "w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition text-slate-600 hover:bg-slate-50 hover:text-slate-900";
+                    }
+                    if (mobNavBtn) {
+                        mobNavBtn.className = "flex flex-col items-center py-1 px-3 text-slate-400 text-xs font-medium";
+                    }
+                }
+            });
+
+            renderAll();
+        }
+
+        function openModal(id) {
+            populateAccountDropdowns();
+            populateYearOptions();
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function populateAccountDropdowns() {
+            const dropdowns = ['txn-account', 'txn-from-account', 'txn-to-account', 'deposit-account', 'pay-account', 'collect-account'];
+            dropdowns.forEach(dId => {
+                const el = document.getElementById(dId);
+                if (!el) return;
+                const currentVal = el.value;
+                el.innerHTML = state.accounts.map(a => `<option value="${a.id}">${a.name} (${formatCurrency(a.balance)})</option>`).join('');
+                if (currentVal && state.accounts.some(a => a.id === currentVal)) {
+                    el.value = currentVal;
+                }
+            });
+        }
+
+        function populateYearOptions() {
+            const sel = document.getElementById('period-year-select');
+            if (sel) {
+                sel.innerHTML = state.availableYears.map(y => `<option value="${y}" ${y === state.activeYear ? 'selected' : ''}>${y}</option>`).join('');
+            }
+            const yList = document.getElementById('year-options-list');
+            if (yList) {
+                yList.innerHTML = state.availableYears.map(y => `
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
+                        <span class="font-bold text-sm text-slate-800">${y}</span>
+                        ${y === state.activeYear 
+                            ? `<span class="text-xs font-bold text-brand bg-brand-light px-2.5 py-1 rounded-md">Active</span>`
+                            : `<button onclick="setActiveYear('${y}')" class="text-xs font-semibold px-3 py-1 bg-white border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-100">Select</button>`
+                        }
+                    </div>
+                `).join('');
+            }
+        }
+
+        function setActiveYear(y) {
+            state.activeYear = y;
+            saveState();
+            populateYearOptions();
+            renderAll();
+            closeModal('yearManagerModal');
+            showToast(`Active year set to ${y}`, 'success');
+        }
+
+        function addNewYearPrompt() {
+            const nextYr = prompt("Enter new year to add (e.g., 2028):");
+            if (nextYr && !state.availableYears.includes(nextYr.trim())) {
+                state.availableYears.push(nextYr.trim());
+                state.availableYears.sort();
+                state.activeYear = nextYr.trim();
+                saveState();
+                populateYearOptions();
+                renderAll();
+                showToast(`Added and selected year ${nextYr}`, 'success');
+            }
+        }
+
+        function getAccountName(accId) {
+            const acc = state.accounts.find(a => a.id === accId);
+            return acc ? acc.name : (accId || 'Cash on Hand');
+        }
+
+        function renderAll() {
+            renderDashboard();
+            renderTransactions();
+            renderSavings();
+            renderDebt();
+            renderBorrowers();
+            renderRemindersBanner();
+            updateLabels();
+        }
+
+        function updateLabels() {
+            const monthSel = document.getElementById('period-month-select');
+            const selectedMonthName = monthSel ? monthSel.options[monthSel.selectedIndex].text : 'March';
+            
+            document.querySelectorAll('.month-year-label').forEach(el => {
+                el.innerText = `${selectedMonthName} ${state.activeYear}`;
+            });
+            document.querySelectorAll('.year-label').forEach(el => {
+                el.innerText = state.activeYear;
+            });
+        }
+
+        function openHistoryModal(category, id) {
+            const modalTitle = document.getElementById('history-modal-title');
+            const modalSubtitle = document.getElementById('history-modal-subtitle');
+            const modalBody = document.getElementById('history-modal-body');
+            const totalSummary = document.getElementById('history-total-summary');
+
+            if (category === 'savings') {
+                const goal = state.savings.find(s => s.id === id);
+                if (!goal) return;
+                modalTitle.innerText = `Savings Goal History: ${goal.name}`;
+                modalSubtitle.innerText = `Target: ${formatCurrency(goal.target)} | Saved: ${formatCurrency(goal.current)}`;
+                
+                const historyList = goal.history || [];
+                if (historyList.length === 0) {
+                    modalBody.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">No deposit history recorded for this goal yet.</div>`;
+                } else {
+                    modalBody.innerHTML = historyList.map((h, index) => `
+                        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="font-bold text-sm text-brand">+${formatCurrency(h.amount)}</span>
+                                    <span class="text-[11px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md font-medium">${getAccountName(h.account)}</span>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-0.5">${h.notes || 'Savings deposit contribution'}</p>
+                                <span class="text-[10px] text-slate-400 font-medium"><i class="fa-regular fa-clock mr-1"></i>${formatDate(h.date)}</span>
+                            </div>
+                            <button onclick="deleteHistoryItem('savings', '${goal.id}', ${index})" title="Delete History Entry" class="text-slate-400 hover:text-rose-600 p-2 rounded-lg transition">
+                                <i class="fa-solid fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                }
+                const totalHist = historyList.reduce((acc, cur) => acc + (parseFloat(cur.amount) || 0), 0);
+                totalSummary.innerText = `Total Recorded History Deposits: ${formatCurrency(totalHist)}`;
+
+            } else if (category === 'debt') {
+                const debt = state.debts.find(d => d.id === id);
+                if (!debt) return;
+                modalTitle.innerText = `Debt Payment History: ${debt.name}`;
+                modalSubtitle.innerText = `Total Debt: ${formatCurrency(debt.total)} | Outstanding: ${formatCurrency(debt.total - debt.paid)}`;
+                
+                const historyList = debt.history || [];
+                if (historyList.length === 0) {
+                    modalBody.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">No payment history recorded for this debt account yet.</div>`;
+                } else {
+                    modalBody.innerHTML = historyList.map((h, index) => `
+                        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="font-bold text-sm text-emerald-600">-${formatCurrency(h.amount)}</span>
+                                    <span class="text-[11px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md font-medium">${getAccountName(h.account)}</span>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-0.5">${h.notes || 'Debt payment installment'}</p>
+                                <span class="text-[10px] text-slate-400 font-medium"><i class="fa-regular fa-clock mr-1"></i>${formatDate(h.date)}</span>
+                            </div>
+                            <button onclick="deleteHistoryItem('debt', '${debt.id}', ${index})" title="Delete Payment History Entry" class="text-slate-400 hover:text-rose-600 p-2 rounded-lg transition">
+                                <i class="fa-solid fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                }
+                const totalHist = historyList.reduce((acc, cur) => acc + (parseFloat(cur.amount) || 0), 0);
+                totalSummary.innerText = `Total Recorded History Payments: ${formatCurrency(totalHist)}`;
+
+            } else if (category === 'borrowers') {
+                const borrower = state.borrowers.find(b => b.id === id);
+                if (!borrower) return;
+                modalTitle.innerText = `Collection History: ${borrower.name}`;
+                modalSubtitle.innerText = `Total Lent: ${formatCurrency(borrower.amount)} | Remaining: ${formatCurrency(borrower.amount - borrower.paid)}`;
+                
+                const historyList = borrower.history || [];
+                if (historyList.length === 0) {
+                    modalBody.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">No collection history recorded yet.</div>`;
+                } else {
+                    modalBody.innerHTML = historyList.map((h, index) => `
+                        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-3">
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="font-bold text-sm text-emerald-600">+${formatCurrency(h.amount)}</span>
+                                    <span class="text-[11px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md font-medium">${getAccountName(h.account)}</span>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-0.5">${h.notes || 'Loan collection payment'}</p>
+                                <span class="text-[10px] text-slate-400 font-medium"><i class="fa-regular fa-clock mr-1"></i>${formatDate(h.date)}</span>
+                            </div>
+                            <button onclick="deleteHistoryItem('borrowers', '${borrower.id}', ${index})" title="Delete History Entry" class="text-slate-400 hover:text-rose-600 p-2 rounded-lg transition">
+                                <i class="fa-solid fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                }
+                const totalHist = historyList.reduce((acc, cur) => acc + (parseFloat(cur.amount) || 0), 0);
+                totalSummary.innerText = `Total Recorded Collections: ${formatCurrency(totalHist)}`;
+            }
+
+            openModal('historyModal');
+        }
+
+        function generateTransactionRowHTML(txn, showAction = true) {
+            const isExpense = txn.type === 'expense';
+            const isIncome = txn.type === 'income';
+            const isTransfer = txn.type === 'transfer';
+
+            const amountColor = isExpense ? 'text-rose-600' : (isIncome ? 'text-emerald-600' : 'text-slate-600');
+            const sign = isExpense ? '-' : (isIncome ? '+' : '');
+            
+            let diffText = '-';
+            let diffColor = 'text-slate-400';
+            let statusBadge = '';
+            
+            // Core requirement: Determine Status (On Budget / Over Budget)
+            if (isExpense && txn.budget > 0) {
+                const diff = txn.budget - txn.amount;
+                diffText = formatCurrency(Math.abs(diff));
+                if (diff >= 0) {
+                    diffColor = 'text-emerald-600';
+                    statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600">On Budget</span>`;
+                } else {
+                    diffColor = 'text-rose-600';
+                    diffText = '-' + diffText;
+                    statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-50 text-rose-600">Over Budget</span>`;
+                }
+            } else if (isIncome) {
+                 statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-brand-light text-brand">Income</span>`;
+            } else if (isTransfer) {
+                 statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">Transfer</span>`;
+            } else {
+                 statusBadge = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-500">Unbudgeted</span>`;
+            }
+
+            // Core requirement: Determine Source
+            let sourceText = isTransfer ? `${getAccountName(txn.fromAccount)} → ${getAccountName(txn.toAccount)}` : getAccountName(txn.account);
+
+            return `
+                <tr class="border-b border-slate-50 hover:bg-slate-50 transition">
+                    <td class="py-3">
+                        <span class="capitalize text-[11px] font-semibold px-2 py-1 rounded-md ${isExpense?'bg-rose-50 text-rose-600':(isIncome?'bg-emerald-50 text-emerald-600':'bg-slate-100 text-slate-600')}">${txn.type}</span>
+                    </td>
+                    <td class="py-3 font-medium text-slate-800 text-xs">${txn.desc}</td>
+                    <td class="py-3 text-slate-500 text-xs">${txn.category || '-'}</td>
+                    <td class="py-3 text-slate-500 text-xs whitespace-nowrap">${formatDate(txn.date)}</td>
+                    <td class="py-3 text-slate-500 text-xs">${txn.budget > 0 ? formatCurrency(txn.budget) : '-'}</td>
+                    <td class="py-3 font-bold ${amountColor} text-right text-xs whitespace-nowrap">${sign}${formatCurrency(txn.amount)}</td>
+                    <td class="py-3 font-medium ${diffColor} text-right text-xs whitespace-nowrap">${diffText}</td>
+                    
+                    <!-- Appended Status & Source column logic here -->
+                    <td class="py-3 text-right">
+                        <div class="flex flex-col items-end">
+                            ${statusBadge}
+                            <span class="text-[10px] text-slate-500 mt-1 max-w-[120px] truncate" title="${sourceText}">${sourceText}</span>
+                        </div>
+                    </td>
+
+                    ${showAction ? `
+                    <td class="py-3 text-right">
+                        <button onclick="deleteTransaction('${txn.id}')" class="text-slate-400 hover:text-rose-600 transition p-1"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                    ` : ''}
+                </tr>
+            `;
+        }
+
+        function renderDashboard() {
+            // Update Accounts Array
+            const accGrid = document.getElementById('accounts-grid-display');
+            if (accGrid) {
+                accGrid.innerHTML = state.accounts.map(acc => `
+                    <div class="p-4 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-between">
+                        <div>
+                            <div class="flex items-center space-x-2 text-slate-500 mb-1">
+                                <i class="fa-solid ${acc.icon || 'fa-wallet'} text-[10px]"></i>
+                                <span class="text-[11px] font-bold uppercase tracking-wider">${acc.name}</span>
+                            </div>
+                            <h4 class="font-bold text-slate-900 text-sm">${formatCurrency(acc.balance)}</h4>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Totals Calculation
+            const totalBalance = state.accounts.reduce((sum, acc) => sum + parseFloat(acc.balance), 0);
+            const totalSavings = state.savings.reduce((sum, s) => sum + parseFloat(s.current), 0);
+            const totalIncome = state.transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + parseFloat(t.amount), 0);
+            const totalExpense = state.transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + parseFloat(t.amount), 0);
+            const totalDebtOutstanding = state.debts.reduce((sum, d) => sum + (parseFloat(d.total) - parseFloat(d.paid)), 0);
+
+            document.getElementById('card-balance').innerText = formatCurrency(totalBalance);
+            document.getElementById('card-total-savings').innerText = formatCurrency(totalSavings);
+            document.getElementById('card-income').innerText = formatCurrency(totalIncome);
+            document.getElementById('card-expense').innerText = formatCurrency(totalExpense);
+            document.getElementById('card-debt').innerText = formatCurrency(totalDebtOutstanding);
+
+            document.getElementById('card-savings-count').innerText = `${state.savings.length} goals active`;
+            document.getElementById('card-debt-count').innerText = `${state.debts.length} active accounts`;
+            
+            const sr = totalIncome > 0 ? ((totalSavings / totalIncome) * 100).toFixed(1) : 0;
+            document.getElementById('card-savings-rate').innerText = `${sr}% savings to income ratio`;
+
+            // Period Filters
+            const selectedMonth = document.getElementById('period-month-select').value;
+            const selectedYear = document.getElementById('period-year-select').value;
+            const prefix = `${selectedYear}-${selectedMonth}`;
+
+            let mIncome = 0; let mExpense = 0;
+            let yIncome = 0; let yExpense = 0;
+
+            state.transactions.forEach(t => {
+                if(t.date.startsWith(prefix)) {
+                    if(t.type === 'income') mIncome += parseFloat(t.amount);
+                    if(t.type === 'expense') mExpense += parseFloat(t.amount);
+                }
+                if(t.date.startsWith(selectedYear)) {
+                    if(t.type === 'income') yIncome += parseFloat(t.amount);
+                    if(t.type === 'expense') yExpense += parseFloat(t.amount);
+                }
+            });
+
+            document.getElementById('period-monthly-income').innerText = formatCurrency(mIncome);
+            document.getElementById('period-monthly-expense').innerText = formatCurrency(mExpense);
+            document.getElementById('period-yearly-income').innerText = formatCurrency(yIncome);
+            document.getElementById('period-yearly-expense').innerText = formatCurrency(yExpense);
+
+            document.getElementById('monthly-budget-limit').innerText = formatCurrency(state.monthlyBudget);
+            
+            const budgetStatusBadge = document.getElementById('monthly-budget-status');
+            if(mExpense > state.monthlyBudget) {
+                budgetStatusBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-50 text-rose-700";
+                budgetStatusBadge.innerText = "Over Budget";
+            } else {
+                budgetStatusBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700";
+                budgetStatusBadge.innerText = "On Track";
+            }
+
+            // Recent Transactions Table (No Action Column)
+            const recentTxnsList = document.getElementById('recent-transactions-list');
+            if(recentTxnsList) {
+                const recent = [...state.transactions].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+                if(recent.length === 0) {
+                    recentTxnsList.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400 text-sm">No transactions yet.</td></tr>`;
+                } else {
+                    recentTxnsList.innerHTML = recent.map(t => generateTransactionRowHTML(t, false)).join('');
+                }
+            }
+
+            updateCharts(mIncome, mExpense, yIncome, yExpense);
+            updateLabels();
+        }
+
+        function renderTransactions() {
+            const list = document.getElementById('full-transactions-list');
+            if(!list) return;
+
+            const searchQuery = document.getElementById('txn-search') ? document.getElementById('txn-search').value.toLowerCase() : '';
+            const filterType = document.getElementById('txn-filter') ? document.getElementById('txn-filter').value : 'all';
+
+            let filtered = state.transactions.filter(t => {
+                const matchSearch = t.desc.toLowerCase().includes(searchQuery) || (t.category && t.category.toLowerCase().includes(searchQuery));
+                const matchFilter = filterType === 'all' || t.type === filterType;
+                return matchSearch && matchFilter;
+            });
+
+            filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            if(filtered.length === 0) {
+                list.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-400 text-sm">No matching transactions found.</td></tr>`;
+            } else {
+                list.innerHTML = filtered.map(t => generateTransactionRowHTML(t, true)).join('');
+            }
+        }
+
+        function renderSavings() {
+            const grid = document.getElementById('savings-grid');
+            if(!grid) return;
+            
+            grid.innerHTML = state.savings.map(s => {
+                const pct = s.target > 0 ? Math.min(100, Math.round((s.current / s.target) * 100)) : 0;
+                return `
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-brand-light text-brand flex items-center justify-center shadow-xs">
+                                <i class="fa-solid fa-bullseye"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-900 text-sm">${s.name}</h4>
+                                <p class="text-[10px] text-slate-400 font-medium">Target Date: ${formatDate(s.date)}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="openHistoryModal('savings', '${s.id}')" class="w-7 h-7 rounded-lg bg-slate-50 text-slate-400 hover:text-brand hover:bg-brand-light flex items-center justify-center transition" title="View History"><i class="fa-solid fa-clock-rotate-left text-xs"></i></button>
+                            <button onclick="deleteEntity('savings', '${s.id}')" class="w-7 h-7 rounded-lg bg-slate-50 text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition" title="Delete"><i class="fa-solid fa-trash text-xs"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="font-bold text-slate-700">${formatCurrency(s.current)}</span>
+                            <span class="text-slate-400 font-medium">${formatCurrency(s.target)}</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                            <div class="bg-brand h-2.5 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                        </div>
+                        <div class="text-right mt-1"><span class="text-[10px] font-bold text-brand">${pct}% Reached</span></div>
+                    </div>
+
+                    <button onclick="openDepositModal('${s.id}')" class="w-full py-2 bg-slate-50 border border-slate-200 hover:bg-brand-light hover:text-brand hover:border-brand/30 text-slate-600 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5">
+                        <i class="fa-solid fa-plus text-[10px]"></i><span>Add Funds</span>
+                    </button>
+                </div>`;
+            }).join('');
+        }
+
+        function renderDebt() {
+            const list = document.getElementById('debt-list');
+            const calList = document.getElementById('debt-calendar-list');
+            if(!list || !calList) return;
+
+            let totalDebtMonthly = 0;
+            let totalDebtOut = 0;
+
+            list.innerHTML = state.debts.map(d => {
+                const remaining = d.total - d.paid;
+                totalDebtOut += remaining;
+                const monthly = parseFloat(d.monthly) || (d.total / d.months);
+                totalDebtMonthly += monthly;
+                const pct = Math.min(100, Math.round((d.paid / d.total) * 100));
+
+                return `
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row gap-6">
+                    <div class="flex-1 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shadow-xs">
+                                    <i class="fa-solid fa-credit-card"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-900 text-sm">${d.name}</h4>
+                                    <p class="text-[10px] text-slate-400 font-medium">Due Date: Every ${new Date(d.dueDate).getDate()}th of the month</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="openScheduleModal('debt', '${d.id}')" class="w-7 h-7 rounded-lg bg-slate-50 text-slate-400 hover:text-brand hover:bg-brand-light flex items-center justify-center transition" title="View Schedule"><i class="fa-regular fa-calendar-days text-xs"></i></button>
+                                <button onclick="openHistoryModal('debt', '${d.id}')" class="w-7 h-7 rounded-lg bg-slate-50 text-slate-400 hover:text-amber-600 hover:bg-amber-50 flex items-center justify-center transition" title="View Payment History"><i class="fa-solid fa-clock-rotate-left text-xs"></i></button>
+                                <button onclick="deleteEntity('debt', '${d.id}')" class="w-7 h-7 rounded-lg bg-slate-50 text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition" title="Delete"><i class="fa-solid fa-trash text-xs"></i></button>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <span class="text-slate-400 font-medium">Paid: <span class="font-bold text-emerald-600">${formatCurrency(d.paid)}</span></span>
+                                <span class="text-slate-500 font-bold">Total: ${formatCurrency(d.total)}</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                                <div class="bg-amber-500 h-2.5 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                            </div>
+                            <div class="text-right mt-1"><span class="text-[10px] font-bold text-amber-600">${pct}% Paid Off</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="md:w-48 flex flex-col justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+                        <div class="space-y-1 mb-3 text-center">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Est. Monthly</span>
+                            <span class="text-lg font-bold text-amber-600">${formatCurrency(monthly)}</span>
+                        </div>
+                        <button onclick="openPayDebtModal('${d.id}')" class="w-full py-2 bg-white border border-slate-200 hover:bg-amber-500 hover:text-white hover:border-amber-500 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 shadow-xs">
+                            <i class="fa-solid fa-money-bill-transfer text-[10px]"></i><span>Pay Now</span>
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+
+            document.getElementById('strategy-total-debt').innerText = formatCurrency(totalDebtOut);
+            document.getElementById('strategy-monthly-debt').innerText = formatCurrency(totalDebtMonthly);
+
+            // Populate Calendar
+            calList.innerHTML = state.debts.map(d => `
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                    <div>
+                        <span class="font-bold text-xs text-slate-800 block">${d.name}</span>
+                        <span class="text-[10px] text-slate-500">Day ${new Date(d.dueDate).getDate()}</span>
+                    </div>
+                    <span class="font-bold text-xs text-amber-600">${formatCurrency(d.monthly || (d.total/d.months))}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderBorrowers() {
+            const list = document.getElementById('borrowers-list');
+            const calList = document.getElementById('borrower-calendar-list');
+            const emptyState = document.getElementById('borrowers-empty');
+            if(!list) return;
+
+            let filtered = state.borrowers;
+            if(state.borrowerFilter !== 'all') {
+                filtered = state.borrowers.filter(b => b.loanType === state.borrowerFilter);
+            }
+
+            document.getElementById('borrower-filter-count').innerText = `Showing ${filtered.length} loans`;
+
+            let totalLent = 0; let totalPaid = 0; let totalBal = 0;
+
+            state.borrowers.forEach(b => {
+                totalLent += parseFloat(b.amount);
+                totalPaid += parseFloat(b.paid);
+                totalBal += (parseFloat(b.amount) - parseFloat(b.paid));
+            });
+
+            document.getElementById('borrowers-total-lent').innerText = formatCurrency(totalLent);
+            document.getElementById('borrowers-total-paid').innerText = formatCurrency(totalPaid);
+            document.getElementById('borrowers-total-balance').innerText = formatCurrency(totalBal);
+
+            if(filtered.length === 0) {
+                list.innerHTML = '';
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                list.innerHTML = filtered.map(b => {
+                    const remaining = b.amount - b.paid;
+                    const pct = Math.min(100, Math.round((b.paid / b.amount) * 100));
+                    
+                    let iconInfo = { icon: 'fa-user-check', color: 'indigo-500', bg: 'indigo-50' };
+                    if(b.loanType === 'Sloan') iconInfo = { icon: 'fa-bag-shopping', color: 'orange-500', bg: 'orange-50' };
+                    if(b.loanType === 'Atome') iconInfo = { icon: 'fa-bolt', color: 'amber-500', bg: 'amber-50' };
+                    if(b.loanType === 'Gloan') iconInfo = { icon: 'fa-mobile-screen-button', color: 'blue-500', bg: 'blue-50' };
+                    if(b.loanType === 'Tiktok') iconInfo = { icon: 'fa-tiktok', color: 'teal-400', bg: 'slate-900', isBrands: true };
+
+                    return `
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-${iconInfo.bg} text-${iconInfo.color} flex items-center justify-center shadow-xs">
+                                    <i class="${iconInfo.isBrands?'fa-brands':'fa-solid'} ${iconInfo.icon}"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-900 text-sm">${b.name}</h4>
+                                    <div class="flex items-center space-x-2 mt-0.5">
+                                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 uppercase">${b.loanType}</span>
+                                        <span class="text-[10px] text-slate-400 font-medium">Due: ${formatDate(b.dueDate)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="openScheduleModal('borrower', '${b.id}')" class="w-7 h-7 rounded-lg bg-slate-50 text-slate-400 hover:text-brand hover:bg-brand-light flex items-center justify-center transition"><i class="fa-regular fa-calendar-days text-xs"></i></button>
+                                <button onclick="openHistoryModal('borrowers', '${b.id}')" class="w-7 h-7 rounded-lg bg-slate-50 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 flex items-center justify-center transition"><i class="fa-solid fa-clock-rotate-left text-xs"></i></button>
+                                <button onclick="deleteEntity('borrowers', '${b.id}')" class="w-7 h-7 rounded-lg bg-slate-50 text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition"><i class="fa-solid fa-trash text-xs"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <div>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Total Loan</span>
+                                <span class="text-xs font-bold text-slate-800">${formatCurrency(b.amount)}</span>
+                            </div>
+                            <div>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Paid</span>
+                                <span class="text-xs font-bold text-emerald-600">${formatCurrency(b.paid)}</span>
+                            </div>
+                            <div>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Remaining</span>
+                                <span class="text-xs font-bold text-rose-600">${formatCurrency(remaining)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3">
+                            <div class="flex-1">
+                                <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                    <div class="bg-brand h-1.5 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                                </div>
+                            </div>
+                            <button onclick="openCollectBorrowerModal('${b.id}')" class="px-4 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white rounded-lg text-[11px] font-bold transition whitespace-nowrap border border-emerald-200">
+                                Collect Payment
+                            </button>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+
+            calList.innerHTML = state.borrowers.map(b => `
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                    <div>
+                        <span class="font-bold text-xs text-slate-800 block">${b.name}</span>
+                        <span class="text-[10px] text-slate-500">Day ${new Date(b.dueDate).getDate()}</span>
+                    </div>
+                    <span class="font-bold text-xs text-brand">${formatCurrency(b.monthly || (b.amount/b.months))}</span>
+                </div>
+            `).join('');
+        }
+
+        function openDepositModal(id) {
+            document.getElementById('deposit-goal-id').value = id;
+            openModal('depositModal');
+        }
+        function openPayDebtModal(id) {
+            document.getElementById('pay-debt-id').value = id;
+            openModal('payDebtModal');
+        }
+        function openCollectBorrowerModal(id) {
+            document.getElementById('collect-borrower-id').value = id;
+            openModal('collectBorrowerModal');
+        }
+
+        function toggleTxnFields() {
+            const tType = document.getElementById('txn-type').value;
+            const catF = document.getElementById('txn-category-field');
+            const aSng = document.getElementById('txn-account-single');
+            const aTrn = document.getElementById('txn-transfer-fields');
+            
+            if(tType === 'transfer') {
+                catF.classList.add('hidden');
+                aSng.classList.add('hidden');
+                aTrn.classList.remove('hidden');
+            } else {
+                catF.classList.remove('hidden');
+                aSng.classList.remove('hidden');
+                aTrn.classList.add('hidden');
+            }
+        }
+
+        function handleTransactionSubmit(e) {
+            e.preventDefault();
+            const type = document.getElementById('txn-type').value;
+            const amount = parseFloat(document.getElementById('txn-amount').value);
+            const account = document.getElementById('txn-account').value;
+            
+            const txn = {
+                id: 't_' + Date.now(),
+                type: type,
+                desc: document.getElementById('txn-desc').value,
+                amount: amount,
+                date: document.getElementById('txn-date').value,
+                budget: parseFloat(document.getElementById('txn-budget').value) || 0,
+                category: type === 'transfer' ? 'Transfer' : document.getElementById('txn-category').value,
+                account: account,
+                fromAccount: document.getElementById('txn-from-account').value,
+                toAccount: document.getElementById('txn-to-account').value
+            };
+
+            state.transactions.push(txn);
+            
+            // Adjust balances
+            if(type === 'income') {
+                const acc = state.accounts.find(a => a.id === account);
+                if(acc) acc.balance = parseFloat(acc.balance) + amount;
+            } else if (type === 'expense') {
+                const acc = state.accounts.find(a => a.id === account);
+                if(acc) acc.balance = parseFloat(acc.balance) - amount;
+            } else if (type === 'transfer') {
+                const fromA = state.accounts.find(a => a.id === txn.fromAccount);
+                const toA = state.accounts.find(a => a.id === txn.toAccount);
+                if(fromA && toA) {
+                    fromA.balance = parseFloat(fromA.balance) - amount;
+                    toA.balance = parseFloat(toA.balance) + amount;
+                }
+            }
+
+            saveState();
+            closeModal('transactionModal');
+            document.getElementById('transactionForm').reset();
+            renderAll();
+            showToast('Transaction added successfully!', 'success');
+        }
+
+        function deleteTransaction(id) {
+            const idx = state.transactions.findIndex(t => t.id === id);
+            if(idx > -1) {
+                const txn = state.transactions[idx];
+                // Reverse balance effect
+                if(txn.type === 'income') {
+                    const acc = state.accounts.find(a => a.id === txn.account);
+                    if(acc) acc.balance = parseFloat(acc.balance) - parseFloat(txn.amount);
+                } else if (txn.type === 'expense') {
+                    const acc = state.accounts.find(a => a.id === txn.account);
+                    if(acc) acc.balance = parseFloat(acc.balance) + parseFloat(txn.amount);
+                } else if (txn.type === 'transfer') {
+                    const fromA = state.accounts.find(a => a.id === txn.fromAccount);
+                    const toA = state.accounts.find(a => a.id === txn.toAccount);
+                    if(fromA && toA) {
+                        fromA.balance = parseFloat(fromA.balance) + parseFloat(txn.amount);
+                        toA.balance = parseFloat(toA.balance) - parseFloat(txn.amount);
+                    }
+                }
+                state.transactions.splice(idx, 1);
+                saveState();
+                renderAll();
+                showToast('Transaction deleted.', 'info');
+            }
+        }
+
+        function deleteEntity(type, id) {
+            if(confirm('Are you sure you want to delete this record?')) {
+                if(type === 'savings') state.savings = state.savings.filter(x => x.id !== id);
+                if(type === 'debt') state.debts = state.debts.filter(x => x.id !== id);
+                if(type === 'borrowers') state.borrowers = state.borrowers.filter(x => x.id !== id);
+                saveState();
+                renderAll();
+                showToast('Record deleted successfully.', 'success');
+            }
+        }
+
+        function deleteHistoryItem(category, entityId, historyIndex) {
+            if(!confirm('Delete this history record?')) return;
+            
+            let entityList;
+            if(category === 'savings') entityList = state.savings;
+            if(category === 'debt') entityList = state.debts;
+            if(category === 'borrowers') entityList = state.borrowers;
+
+            const entity = entityList.find(e => e.id === entityId);
+            if(entity && entity.history && entity.history[historyIndex]) {
+                const item = entity.history[historyIndex];
+                
+                // Reverse effect
+                if(category === 'savings') entity.current = parseFloat(entity.current) - parseFloat(item.amount);
+                if(category === 'debt') entity.paid = parseFloat(entity.paid) - parseFloat(item.amount);
+                if(category === 'borrowers') entity.paid = parseFloat(entity.paid) - parseFloat(item.amount);
+
+                entity.history.splice(historyIndex, 1);
+                saveState();
+                openHistoryModal(category, entityId); // Refresh modal
+                renderAll(); // Refresh UI behind it
+                showToast('History item removed.', 'info');
+            }
+        }
+
+        function selectLoanType(type) {
+            document.getElementById('borrower-loan-type').value = type;
+            document.querySelectorAll('.loan-type-btn').forEach(btn => {
+                btn.classList.remove('border-brand', 'bg-brand-light', 'text-brand');
+                btn.classList.add('border-slate-200', 'bg-slate-50', 'text-slate-700');
+            });
+            const activeBtn = document.getElementById('btn-loan-' + type);
+            if(activeBtn) {
+                activeBtn.classList.remove('border-slate-200', 'bg-slate-50', 'text-slate-700');
+                activeBtn.classList.add('border-brand', 'bg-brand-light', 'text-brand');
+            }
+        }
+
+        function setBorrowerFilter(filter) {
+            state.borrowerFilter = filter;
+            document.querySelectorAll('.b-filter-btn').forEach(btn => {
+                btn.className = "b-filter-btn px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100";
+            });
+            const activeBtn = document.getElementById('b-filter-' + filter);
+            if(activeBtn) {
+                activeBtn.className = "b-filter-btn px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 bg-brand text-white border border-brand shadow-xs";
+            }
+            renderBorrowers();
+        }
+
+        function autoCalculateMonthly(prefix) {
+            const amt = parseFloat(document.getElementById(`${prefix}-amount`)?.value || document.getElementById(`${prefix}-total`)?.value) || 0;
+            const mos = parseInt(document.getElementById(`${prefix}-months`).value) || 1;
+            const calc = amt / mos;
+            const displayEl = document.getElementById(`${prefix}-monthly-calc`);
+            if(displayEl) {
+                displayEl.innerText = formatCurrency(calc) + ' / mo';
+            }
+            const inputEl = document.getElementById(`${prefix}-monthly`);
+            if(inputEl && !inputEl.value) {
+                inputEl.value = calc.toFixed(2);
+            }
+        }
+
+        function handleBudgetSubmit(e) {
+            e.preventDefault();
+            state.monthlyBudget = parseFloat(document.getElementById('budget-amount-input').value) || 35000;
+            saveState();
+            closeModal('budgetModal');
+            renderDashboard();
+            showToast('Budget updated successfully!', 'success');
+        }
+
+        function handleSavingsSubmit(e) {
+            e.preventDefault();
+            const goal = {
+                id: 's_' + Date.now(),
+                name: document.getElementById('goal-name').value,
+                target: parseFloat(document.getElementById('goal-target').value),
+                current: 0,
+                date: document.getElementById('goal-date').value,
+                history: []
+            };
+            state.savings.push(goal);
+            saveState();
+            closeModal('savingsModal');
+            document.getElementById('savingsForm').reset();
+            renderSavings();
+            showToast('Goal created!', 'success');
+        }
+
+        function handleDebtSubmit(e) {
+            e.preventDefault();
+            const debt = {
+                id: 'd_' + Date.now(),
+                name: document.getElementById('debt-name').value,
+                total: parseFloat(document.getElementById('debt-total').value),
+                months: parseInt(document.getElementById('debt-months').value),
+                monthly: parseFloat(document.getElementById('debt-monthly').value),
+                paid: 0,
+                dueDate: document.getElementById('debt-due-date').value,
+                apr: parseFloat(document.getElementById('debt-apr').value) || 0,
+                history: []
+            };
+            state.debts.push(debt);
+            saveState();
+            closeModal('debtModal');
+            document.getElementById('debtForm').reset();
+            renderDebt();
+            showToast('Debt account added!', 'success');
+        }
+
+        function handleBorrowerSubmit(e) {
+            e.preventDefault();
+            const b = {
+                id: 'b_' + Date.now(),
+                name: document.getElementById('borrower-name').value,
+                loanType: document.getElementById('borrower-loan-type').value,
+                amount: parseFloat(document.getElementById('borrower-amount').value),
+                months: parseInt(document.getElementById('borrower-months').value),
+                monthly: parseFloat(document.getElementById('borrower-amount').value) / parseInt(document.getElementById('borrower-months').value),
+                paid: parseFloat(document.getElementById('borrower-paid').value) || 0,
+                dueDate: document.getElementById('borrower-due-date').value,
+                notes: document.getElementById('borrower-notes').value,
+                history: []
+            };
+            state.borrowers.push(b);
+            saveState();
+            closeModal('borrowerModal');
+            document.getElementById('borrowerForm').reset();
+            renderBorrowers();
+            showToast('Borrower loan recorded!', 'success');
+        }
+
+        function handleDepositSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('deposit-goal-id').value;
+            const goal = state.savings.find(s => s.id === id);
+            if(!goal) return;
+
+            const amount = parseFloat(document.getElementById('deposit-amount').value);
+            const account = document.getElementById('deposit-account').value;
+            const date = document.getElementById('deposit-date').value;
+            const notes = document.getElementById('deposit-notes').value;
+            const addTxn = document.getElementById('deposit-add-txn').checked;
+
+            goal.current = parseFloat(goal.current) + amount;
+            goal.history.push({ id: 'sh_'+Date.now(), date, amount, account, notes });
+
+            if(addTxn) {
+                state.transactions.push({
+                    id: 't_' + Date.now(), type: 'expense', desc: `Savings: ${goal.name}`,
+                    amount: amount, date: date, category: 'Savings Deposit', account: account, budget: 0
+                });
+                const acc = state.accounts.find(a => a.id === account);
+                if(acc) acc.balance = parseFloat(acc.balance) - amount;
+            }
+
+            saveState();
+            closeModal('depositModal');
+            document.getElementById('depositForm').reset();
+            renderAll();
+            showToast('Funds added to savings!', 'success');
+        }
+
+        function handleCollectBorrowerSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('collect-borrower-id').value;
+            const b = state.borrowers.find(x => x.id === id);
+            if(!b) return;
+
+            const amount = parseFloat(document.getElementById('collect-amount').value);
+            const account = document.getElementById('collect-account').value;
+            const date = document.getElementById('collect-date').value;
+            const notes = document.getElementById('collect-notes').value;
+            const addTxn = document.getElementById('collect-add-txn').checked;
+
+            b.paid = parseFloat(b.paid) + amount;
+            b.history.push({ id: 'bh_'+Date.now(), date, amount, account, notes });
+
+            if(addTxn) {
+                state.transactions.push({
+                    id: 't_' + Date.now(), type: 'income', desc: `Collection: ${b.name}`,
+                    amount: amount, date: date, category: 'Loan Collection', account: account, budget: 0
+                });
+                const acc = state.accounts.find(a => a.id === account);
+                if(acc) acc.balance = parseFloat(acc.balance) + amount;
+            }
+
+            saveState();
+            closeModal('collectBorrowerModal');
+            document.getElementById('collectBorrowerForm').reset();
+            renderAll();
+            showToast('Collection recorded!', 'success');
+        }
+
+        function handlePayDebtSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('pay-debt-id').value;
+            const d = state.debts.find(x => x.id === id);
+            if(!d) return;
+
+            const amount = parseFloat(document.getElementById('pay-amount').value);
+            const account = document.getElementById('pay-account').value;
+            const date = document.getElementById('pay-date').value;
+            const notes = document.getElementById('pay-notes').value;
+            const addTxn = document.getElementById('pay-add-txn').checked;
+
+            d.paid = parseFloat(d.paid) + amount;
+            d.history.push({ id: 'dh_'+Date.now(), date, amount, account, notes });
+
+            if(addTxn) {
+                state.transactions.push({
+                    id: 't_' + Date.now(), type: 'expense', desc: `Debt Payment: ${d.name}`,
+                    amount: amount, date: date, category: 'Debt Payment', account: account, budget: 0
+                });
+                const acc = state.accounts.find(a => a.id === account);
+                if(acc) acc.balance = parseFloat(acc.balance) - amount;
+            }
+
+            saveState();
+            closeModal('payDebtModal');
+            document.getElementById('payDebtForm').reset();
+            renderAll();
+            showToast('Debt payment recorded!', 'success');
+        }
+
+        function applyThemeColor(hex) {
+            state.themeColor = hex;
+            document.documentElement.style.setProperty('--brand-600', hex);
+            document.documentElement.style.setProperty('--brand-500', hex);
+            // Derive light variant roughly
+            document.documentElement.style.setProperty('--brand-50', hex + '15');
+            document.documentElement.style.setProperty('--brand-100', hex + '20');
+            saveState();
+        }
+
+        function toggleDarkMode() {
+            state.darkMode = !state.darkMode;
+            if(state.darkMode) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            saveState();
+        }
+
+        function renderRemindersBanner() {
+            const banner = document.getElementById('reminders-alert-banner');
+            const today = new Date();
+            const weekAhead = new Date();
+            weekAhead.setDate(today.getDate() + 7);
+
+            let hasReminders = false;
+
+            // Simplified check if any debt or borrower is due within the next 7 days based on their day
+            state.debts.forEach(d => {
+                const dueDate = new Date(d.dueDate);
+                if(dueDate.getDate() >= today.getDate() && dueDate.getDate() <= weekAhead.getDate()) hasReminders = true;
+            });
+            state.borrowers.forEach(b => {
+                const dueDate = new Date(b.dueDate);
+                if(dueDate.getDate() >= today.getDate() && dueDate.getDate() <= weekAhead.getDate()) hasReminders = true;
+            });
+
+            if(hasReminders) {
+                banner.classList.remove('hidden');
+            } else {
+                banner.classList.add('hidden');
+            }
+        }
+
+        function openScheduleModal(type, id) {
+             const title = document.getElementById('schedule-modal-title');
+             const body = document.getElementById('schedule-modal-body');
+             
+             let item, monthly, duration, start;
+             if(type === 'debt') {
+                 item = state.debts.find(d => d.id === id);
+                 if(!item) return;
+                 title.innerText = `Amortization Schedule: ${item.name}`;
+                 monthly = item.monthly || (item.total / item.months);
+                 duration = item.months;
+                 start = new Date(item.dueDate);
+             } else {
+                 item = state.borrowers.find(b => b.id === id);
+                 if(!item) return;
+                 title.innerText = `Collection Schedule: ${item.name}`;
+                 monthly = item.monthly || (item.amount / item.months);
+                 duration = item.months;
+                 start = new Date(item.dueDate);
+             }
+
+             let scheduleHTML = '';
+             for(let i=0; i<duration; i++) {
+                 const d = new Date(start);
+                 d.setMonth(d.getMonth() + i);
+                 const past = d < new Date();
+                 scheduleHTML += `
+                     <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl flex justify-between items-center ${past ? 'opacity-50' : ''}">
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold text-slate-800">Month ${i+1}</span>
+                            <span class="text-[10px] text-slate-500">${d.toLocaleDateString('en-US', {month:'long', day:'numeric', year:'numeric'})}</span>
+                        </div>
+                        <span class="font-bold text-sm ${type === 'debt' ? 'text-amber-600' : 'text-brand'}">${formatCurrency(monthly)}</span>
+                     </div>
+                 `;
+             }
+             body.innerHTML = scheduleHTML;
+             openModal('scheduleModal');
+        }
+
+        function updateCharts(mInc, mExp, yInc, yExp) {
+            const commonOptions = {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            };
+
+            // Cashflow
+            const ctxFlow = document.getElementById('cashflowChart');
+            if(chartCashflow) chartCashflow.destroy();
+            chartCashflow = new Chart(ctxFlow, {
+                type: 'bar',
+                data: {
+                    labels: ['Monthly', 'Yearly (Scaled)'],
+                    datasets: [
+                        { label: 'Income', data: [mInc, yInc/12], backgroundColor: '#10b981', borderRadius: 6 },
+                        { label: 'Expenses', data: [mExp, yExp/12], backgroundColor: '#f43f5e', borderRadius: 6 }
+                    ]
+                },
+                options: commonOptions
+            });
+
+            // Budget Diff
+            const ctxBud = document.getElementById('budgetDiffChart');
+            if(chartBudget) chartBudget.destroy();
+            chartBudget = new Chart(ctxBud, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Spent', 'Remaining'],
+                    datasets: [{
+                        data: [mExp, Math.max(0, state.monthlyBudget - mExp)],
+                        backgroundColor: ['#f43f5e', '#e2e8f0'],
+                        borderWidth: 0,
+                        cutout: '75%'
+                    }]
+                },
+                options: commonOptions
+            });
+
+            // Expenses categories
+            const ctxExp = document.getElementById('expenseChart');
+            if(chartExpense) chartExpense.destroy();
+            
+            const expTxns = state.transactions.filter(t => t.type === 'expense');
+            const cats = {};
+            expTxns.forEach(t => { cats[t.category] = (cats[t.category] || 0) + parseFloat(t.amount); });
+            
+            chartExpense = new Chart(ctxExp, {
+                type: 'polarArea',
+                data: {
+                    labels: Object.keys(cats),
+                    datasets: [{
+                        data: Object.values(cats),
+                        backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#0ea5e9', '#8b5cf6', '#f43f5e', '#64748b']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        // Initialize application
+        window.onload = () => {
+            if(state.darkMode) document.documentElement.classList.add('dark');
+            applyThemeColor(state.themeColor);
+            
+            const dateInputs = ['txn-date', 'goal-date', 'borrower-due-date', 'debt-due-date', 'deposit-date', 'collect-date', 'pay-date'];
+            const today = new Date().toISOString().split('T')[0];
+            dateInputs.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.value = today;
+            });
+            document.getElementById('budget-amount-input').value = state.monthlyBudget;
+            
+            switchTab('dashboard');
+        };
+    </script>
+</body>
+</html>
